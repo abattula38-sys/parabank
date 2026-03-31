@@ -1,0 +1,235 @@
+Design test scenarios
+
+For Login
+
+Verify user can login with valid username and password
+Verify error message for invalid username
+Verify error message for invalid password
+Verify login with empty username and password
+Verify login with only username
+Verify login with only password
+Verify password field is masked
+Verify login button is clickable
+
+For Registration
+
+Verify “Register” link navigation
+Verify new user can register with valid data
+Verify validation messages for mandatory fields
+Verify duplicate username handling
+
+Automate core scenarios
+
+Driver Setup
+
+namespace ParaBankTests.Base
+{
+
+public class BaseTest
+{
+protected IWebDriver driver;
+
+public void Setup()
+{
+new DriverManager().SetUpDriver(new ChromeConfig());
+driver = new ChromeDriver();
+driver.Manage().Window.Maximize();
+driver.Navigate().GoToUrl(&quot;https://parabank.parasoft.com/parabank/index.htm&quot;);
+}
+
+public void TearDown()
+{
+driver.Quit();
+}
+}
+}
+
+2.Page Object Class (LoginPage.cs)
+
+namespace ParaBankTests.Pages
+
+{
+public class LoginPage
+{
+private IWebDriver driver;
+
+public LoginPage(IWebDriver driver)
+{
+this.driver = driver;
+}
+
+// Locators
+private By username = By.Name(&quot;username&quot;);
+private By password = By.Name(&quot;password&quot;);
+private By loginBtn = By.XPath(&quot;//input[@value=&#39;Log In&#39;]&quot;);
+private By errorMsg = By.XPath(&quot;//p[@class=&#39;error&#39;]&quot;);
+
+// Actions
+public void EnterUsername(string uname)
+{
+driver.FindElement(username).Clear();
+driver.FindElement(username).SendKeys(uname);
+}
+
+public void EnterPassword(string pwd)
+{
+driver.FindElement(password).Clear();
+driver.FindElement(password).SendKeys(pwd);
+}
+
+public void ClickLogin()
+{
+driver.FindElement(loginBtn).Click();
+}
+
+public string GetErrorMessage()
+{
+return driver.FindElement(errorMsg).Text;
+}
+}
+}
+
+3. Test Class (LoginTests.cs)
+
+namespace ParaBankTests.Tests
+{
+public class LoginTests : BaseTest
+{
+LoginPage loginPage;
+
+[SetUp]
+public void Init()
+{
+Setup();
+loginPage = new LoginPage(driver);
+
+}
+
+[Test]
+public void ValidLoginTest()
+{
+loginPage.EnterUsername(&quot;john&quot;);
+loginPage.EnterPassword(&quot;demo&quot;);
+loginPage.ClickLogin();
+
+Assert.IsTrue(driver.Title.Contains(&quot;Accounts Overview&quot;));
+}
+
+[Test]
+public void InvalidLoginTest()
+{
+loginPage.EnterUsername(&quot;wrong&quot;);
+loginPage.EnterPassword(&quot;wrong&quot;);
+loginPage.ClickLogin();
+
+string error = loginPage.GetErrorMessage();
+Assert.IsTrue(error.ToLower().Contains(&quot;error&quot;));
+}
+
+[Test]
+public void BlankLoginTest()
+{
+loginPage.EnterUsername(&quot;&quot;);
+loginPage.EnterPassword(&quot;&quot;);
+
+loginPage.ClickLogin();
+
+string error = loginPage.GetErrorMessage();
+Assert.IsTrue(!string.IsNullOrEmpty(error));
+}
+
+[TearDown]
+public void Cleanup()
+{
+TearDown();
+}
+}
+}
+
+Here I have covered below one&#39;s,
+
+1.Valid login
+2.Invalid login
+3. Blank login
+4.POM design pattern
+5. NUnit framework
+6. Clean reusable structure
+
+Testing and automation decisions
+
+1. Testing Decisions
+
+Login (Username, Password, Login button)
+Forgot Login Info
+Register
+Navigation menu
+Services &amp; News sections
+Decision:
+Login is business-critical, so it gets maximum testing focus.
+Risk-Based Testing
+Login → High risk (security + entry point)
+Registration → Medium risk
+Links/Navigation → Low risk
+Decision:
+More test scenarios for login (valid, invalid, security, edge cases)
+Test Coverage Strategy
+
+Functional Testing
+Valid login
+Invalid login
+Blank fields
+Field validations
+
+Negative Testing
+Wrong credentials
+Labels (Username, Password)
+Button visibility
+
+Test Data Decisions
+Valid users → for positive testing
+Invalid users → for negative testing
+Boundary values → long username/password
+Decision: Use reusable and maintainable test data
+
+2. Automation Decisions
+Login functionality (high priority)
+Negative scenarios
+Regression scenarios
+
+Framework Design Decision
+I use Hybrid Framework (POM + NUnit + Utilities)
+
+Maintainability → Page classes separate UI logic
+Reusability → Common methods in BasePage
+Scalability → Easy to add new modules
+
+Technical Decisions
+
+Locator Strategy
+Prefer: ID / Name
+Use XPath only when needed
+
+Wait Strategy
+
+Use Explicit Waits (WebDriverWait)
+
+Avoid Thread.Sleep
+
+Error Handling
+
+Capture error message for invalid login
+Take screenshots on failure
+
+3. Security Testing Decisions
+From login page:
+Test SQL Injection
+Example: &#39; OR &#39;1&#39;=&#39;1
+Validate password masking
+Check session timeout Decision: Security is critical for banking apps
+
+4. Reporting Decisions
+Use Extent Reports
+Capture:
+Pass/Fail status
+Screenshots
+Logs
